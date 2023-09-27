@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Button Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 18px;
+            margin: 10px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s, color 0.3s;
+            border-radius: 5px;
+            outline: none;
+            box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        #start-button {
+            background-color: #4caf50;
+            color: white;
+        }
+
+        #start-button:hover {
+            background-color: #45a049;
+        }
+
+        #stats-button {
+            background-color: #2196F3;
+            color: white;
+        }
+
+        #stats-button:hover {
+            background-color: #1e87db;
+        }
+
+        #settings-button {
+            background-color: #ff9800;
+            color: white;
+        }
+
+        #settings-button:hover {
+            background-color: #ff8c00;
+        }
+
+        /* Adding a simple button animation on hover */
+        button:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <a href="flashcard.html" id="start-button"><button>Start</button></a>
+    <button id="stats-button">Stats</button>
+    <button id="settings-button">Settings</button>
+</body>
+</html>

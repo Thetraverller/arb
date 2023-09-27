@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashcard App</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f2f2f2;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            display: flex;
+            flex-direction: row;
+            height: 100vh;
+        }
+        .sidebar {
+            width: 200px;
+            background-color: #007BFF;
+            color: #fff;
+            padding: 20px;
+        }
+        .main-content {
+            flex-grow: 1;
+            padding: 20px;
+            text-align: center;
+        }
+        h1 {
+            font-size: 36px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .flashcard {
+            width: 300px;
+            height: 200px;
+            background-color: #fff;
+            margin: 20px auto;
+            border: 1px solid #ccc;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        .flashcard:hover {
+            transform: scale(1.05);
+        }
+        .flashcard-content {
+            padding: 20px;
+        }
+        #next-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 18px;
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        #next-button:hover {
+            background-color: #0056b3;
+        }
+        .sidebar-button {
+            display: block;
+            margin: 10px 0;
+            padding: 10px;
+            background-color: transparent;
+            border: none;
+            color: #fff;
+            font-size: 18px;
+            text-align: left;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .sidebar-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h2>Menu</h2>
+            <button class="sidebar-button" onclick="navigate('home')">Home</button>
+            <button class="sidebar-button" onclick="navigate('stats')">Stats</button>
+            <button class="sidebar-button" onclick="navigate('settings')">Settings</button>
+        </div>
+        <div class="main-content">
+            <h1>Flashcard App</h1>
+
+            <div class="flashcard" id="flashcard">
+                <div class="flashcard-content" id="word"></div>
+                <div class="flashcard-content" id="type" style="display: none;"></div>
+            </div>
+            <button id="next-button">Next</button>
+        </div>
+    </div>
+
+    <script>
+        let flashcards;
+        let currentCardIndex = 0;
+
+        const flashcard = document.getElementById("flashcard");
+        const wordElement = document.getElementById("word");
+        const typeElement = document.getElementById("type");
+        const nextButton = document.getElementById("next-button");
+
+        function navigate(page) {
+            // You can add navigation logic here
+            alert(`Navigating to ${page}`);
+        }
+
+        // Fetch flashcards data from the JSON file
+        fetch("flashcards.json")
+            .then(response => response.json())
+            .then(data => {
+                flashcards = data;
+                showFlashcard(currentCardIndex);
+            })
+            .catch(error => {
+                console.error("Error loading flashcards:", error);
+            });
+
+        function showFlashcard(index) {
+            const card = flashcards[index];
+            wordElement.textContent = card.word;
+            typeElement.textContent = card.type;
+            typeElement.style.display = "none";
+        }
+
+        flashcard.addEventListener("click", function () {
+            const type = typeElement;
+            type.style.display = type.style.display === "none" ? "block" : "none";
+        });
+
+        nextButton.addEventListener("click", function () {
+            currentCardIndex = (currentCardIndex + 1) % flashcards.length;
+            showFlashcard(currentCardIndex);
+        });
+    </script>
+</body>
+</html>

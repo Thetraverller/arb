@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashcard App</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+        
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            margin: 0;
+            padding: 0;
+            position: relative;
+        }
+        .container {
+            display: flex;
+            flex-direction: row;
+            height: 100vh;
+        }
+        .sidebar {
+            width: 200px;
+            background-color:#c6f2ff;
+            color: #7d7d7d;
+            padding: 20px;
+        }
+        .main-content {
+            flex-grow: 1;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+        h1 {
+            font-size: 36px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .flashcard {
+            width: 300px;
+            height: 200px;
+            background-color: #fff;
+            margin: 20px auto;
+            border: 1px solid #ccc;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        .flashcard:hover {
+            transform: scale(1.05);
+        }
+        .flashcard-content {
+            padding: 20px;
+        }
+        #next-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 18px;
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        #next-button:hover {
+            background-color: #0056b3;
+        }
+        .sidebar-button {
+            display: block;
+            margin: 10px 0;
+            padding: 10px;
+            background-color: transparent;
+            border: none;
+            color: #ffffff;
+            font-size: 18px;
+            text-align: left;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .sidebar-button:hover {
+            background-color: #0056b3;
+        }
+        .counter {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: #007BFF;
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+        .type-buttons {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .type-button {
+            padding: 10px 20px;
+            font-size: 18px;
+            background-color: #007BFF;
+            color: #ffffff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0 10px;
+            transition: background-color 0.3s ease;
+        }
+        .type-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h2>Menu</h2>
+            <button class="sidebar-button" onclick="navigate('home')">Home</button>
+            <button class="sidebar-button" onclick="navigate('stats')">Stats</button>
+            <button class="sidebar-button" onclick="navigate('settings')">Settings</button>
+        </div>
+        <div class="main-content">
+            <h1>Flashcard App</h1>
+
+            <div class="counter" id="click-counter">0</div>
+
+            <div class="flashcard" id="flashcard">
+                <div class="flashcard-content" id="word"></div>
+                <div class="flashcard-content" id="type" style="display: none;"></div>
+            </div>
+            <div class="type-buttons" id="type-buttons">
+                <!-- Type buttons will be added dynamically here -->
+            </div>
+            <button id="next-button">Next</button>
+        </div>
+    </div>
+
+    <script>
+        let flashcards;
+        let currentCardIndex = 0;
+        let clickCount = 0;
+
+        const flashcard = document.getElementById("flashcard");
+        const wordElement = document.getElementById("word");
+        const typeElement = document.getElementById("type");
+        const nextButton = document.getElementById("next-button");
+        const clickCounter = document.getElementById("click-counter");
+        const typeButtonsContainer = document.getElementById("type-buttons");
+
+        function navigate(page) {
+            // You can add navigation logic here
+            alert(`Navigating to ${page}`);
+        }
+
+        // Fetch flashcards data from the JSON file
+        fetch("flashcards.json")
+            .then(response => response.json())
+            .then(data => {
+                flashcards = data;
+                showFlashcard(currentCardIndex);
+                createTypeButtons();
+            })
+            .catch(error => {
+                console.error("Error loading flashcards:", error);
+            });
+
+        function showFlashcard(index) {
+            const card = flashcards[index];
+            wordElement.textContent = card.word;
+            typeElement.textContent = card.type;
+            typeElement.style.display = "none";
+        }
+
+        function createTypeButtons() {
+            const card = flashcards[currentCardIndex];
+            const types = getRandomTypes(flashcards, card.type); // Pass flashcards data and correct type
+            types.push(card.type); // Add the correct type
+            shuffleArray(types); // Shuffle the types to randomize their order
+            typeButtonsContainer.innerHTML = "";
+
+            for (const type of types) {
+                const typeButton = document.createElement("button");
+                typeButton.classList.add("type-button");
+                typeButton.textContent = type;
+                typeButton.addEventListener("click", () => handleTypeButtonClick(type));
+                typeButtonsContainer.appendChild(typeButton);
+            }
+        }
+
+        function handleTypeButtonClick(selectedType) {
+            const card = flashcards[currentCardIndex];
+            if (selectedType === card.type) {
+                clickCount++;
+                clickCounter.textContent = clickCount;
+            }
+            // Disable type buttons after selecting one
+            disableTypeButtons();
+        }
+
+        function disableTypeButtons() {
+            const typeButtons = document.querySelectorAll(".type-button");
+            typeButtons.forEach(button => (button.disabled = true));
+        }
+
+        // Shuffle an array randomly (Fisher-Yates algorithm)
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        // Get two random incorrect types that do not match the correct type
+        function getRandomTypes(flashcardData, correctType) {
+            const allTypes = flashcardData
+                .filter(card => card.type !== correctType) // Filter out the correct type
+                .map(card => card.type); // Extract all types from the remaining cards
+
+            // Shuffle allTypes
+            shuffleArray(allTypes);
+
+            // Select two unique random incorrect types
+            const selectedTypes = [];
+            for (const type of allTypes) {
+                if (selectedTypes.length >= 2) {
+                    break; // We have selected two types
+                }
+                if (!selectedTypes.includes(type)) {
+                    selectedTypes.push(type);
+                }
+            }
+
+            return selectedTypes;
+        }
+
+        flashcard.addEventListener("click", function () {
+            const type = typeElement;
+            type.style.display = type.style.display === "none" ? "block" : "none";
+        });
+
+        nextButton.addEventListener("click", function () {
+            currentCardIndex = (currentCardIndex + 1) % flashcards.length;
+            showFlashcard(currentCardIndex);
+            createTypeButtons();
+        });
+    </script>
+</body>
+</html>

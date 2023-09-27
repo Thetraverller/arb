@@ -1,0 +1,62 @@
+[
+    {
+        "word": "a",
+        "type": "preposition"
+    },
+    {
+        "word": "at",
+        "type": "preposition"
+    },
+    {
+        "word": "in",
+        "type": "preposition"
+    },
+    {
+        "word": "on",
+        "type": "preposition"
+    },
+    {
+        "word": "above",
+        "type": "preposition"
+    },
+    {
+        "word": "heated",
+        "type": "verb"
+    },
+    {
+        "word": "seated",
+        "type": "verb"
+    },
+    {
+        "word": "treated",
+        "type": "verb"
+    },
+    {
+        "word": "completed",
+        "type": "verb"
+    },
+    {
+        "word": "defeated",
+        "type": "verb"
+    },
+    {
+        "word": "repeated",
+        "type": "verb"
+    },
+    {
+        "word": " سعادة ",
+        "type": "noun"
+    },
+    {
+        "word": "ate",
+        "type": "verb"
+    },
+    {
+        "word": "حَرَكَات",
+        "type": "noun"
+    },
+    {
+        "word": "migrate",
+        "type": "verb"
+    }
+]

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashcard App</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f2f2f2;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            display: flex;
+            flex-direction: row;
+            height: 100vh;
+        }
+        .sidebar {
+            width: 200px;
+            background-color: #007BFF;
+            color: #fff;
+            padding: 20px;
+        }
+        .main-content {
+            flex-grow: 1;
+            padding: 20px;
+            text-align: center;
+        }
+        h1 {
+            font-size: 36px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .flashcard {
+            width: 300px;
+            height: 200px;
+            background-color: #fff;
+            margin: 20px auto;
+            border: 1px solid #ccc;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        .flashcard:hover {
+            transform: scale(1.05);
+        }
+        .flashcard-content {
+            padding: 20px;
+        }
+        #next-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 18px;
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        #next-button:hover {
+            background-color: #0056b3;
+        }
+        .sidebar-button {
+            display: block;
+            margin: 10px 0;
+            padding: 10px;
+            background-color: transparent;
+            border: none;
+            color: #fff;
+            font-size: 18px;
+            text-align: left;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .sidebar-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h2>Menu</h2>
+            <button class="sidebar-button" onclick="navigate('home')">Home</button>
+            <button class="sidebar-button" onclick="navigate('stats')">Stats</button>
+            <button class="sidebar-button" onclick="navigate('settings')">Settings</button>
+        </div>
+        <div class="main-content">
+            <h1>Flashcard App</h1>
+
+            <form id="flashcard-form">
+                <div class="flashcard" id="flashcard">
+                    <div class="flashcard-content" id="word"></div>
+                    <!-- Input field for typing the "type" -->
+                    <input type="text" id="type-input" placeholder="Type the type..." required>
+                </div>
+                <button type="submit" id="next-button">Next</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let flashcards;
+        let currentCardIndex = 0;
+
+        const flashcard = document.getElementById("flashcard");
+        const wordElement = document.getElementById("word");
+        const typeInput = document.getElementById("type-input");
+        const flashcardForm = document.getElementById("flashcard-form");
+
+        function navigate(page) {
+            // You can add navigation logic here
+            alert(`Navigating to ${page}`);
+        }
+
+        // Function to perform a fuzzy string comparison
+        function fuzzyCompare(str1, str2) {
+    const lowerStr1 = str1.toLowerCase();
+    const lowerStr2 = str2.toLowerCase();
+
+    let i = 0;
+    let j = 0;
+    let typoCount = 0;
+
+    while (i < lowerStr1.length && j < lowerStr2.length) {
+        if (lowerStr1[i] !== lowerStr2[j]) {
+            typoCount++;
+            if (typoCount > 1) {
+                return false; // More than one typo, consider them different
+            }
+            if (lowerStr1.length > lowerStr2.length) {
+                i++; // Skip a character in str1
+            } else if (lowerStr2.length > lowerStr1.length) {
+                j++; // Skip a character in str2
+            } else {
+                i++; // Both strings have the same length, move both pointers
+                j++;
+            }
+        } else {
+            i++;
+            j++;
+        }
+    }
+
+    // Check if one of the strings has been fully processed
+    return (i === lowerStr1.length && j - lowerStr2.length <= 1) ||
+           (j === lowerStr2.length && i - lowerStr1.length <= 1);
+}
+
+
+        // Fetch flashcards data from the JSON file
+        fetch("flashcards.json")
+            .then(response => response.json())
+            .then(data => {
+                flashcards = data;
+                showFlashcard(currentCardIndex);
+            })
+            .catch(error => {
+                console.error("Error loading flashcards:", error);
+            });
+
+        function showFlashcard(index) {
+            const card = flashcards[index];
+            wordElement.textContent = card.word;
+            // Clear the input field
+            typeInput.value = "";
+        }
+
+        flashcardForm.addEventListener("submit", function (event) {
+            event.preventDefault(); // Prevent form submission
+
+            const card = flashcards[currentCardIndex];
+            const userTypedType = typeInput.value.trim(); // Get user input and trim whitespace
+
+            // Check if the user's typed "type" is a close match to the correct "type"
+            if (fuzzyCompare(userTypedType, card.type)) {
+                // If it's a match, move to the next card
+                currentCardIndex = (currentCardIndex + 1) % flashcards.length;
+                showFlashcard(currentCardIndex);
+            } else {
+                // If it doesn't match closely, alert the user to try again
+                alert("Incorrect type. Try again.");
+            }
+        });
+    </script>
+</body>
+</html>
