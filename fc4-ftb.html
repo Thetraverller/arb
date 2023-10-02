@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fill in the Blanks Exercise</title>
+</head>
+<body>
+    <h1>Fill in the Blanks Exercise</h1>
+    <div id="exercise-container"></div>
+    <button id="check-answers-button">Check Answers</button>
+    <div id="results-container"></div>
+
+    <script>
+        var flashcards = []; // Initialize an empty array for flashcards data
+        
+        // Function to create a fill-in-the-blanks question with an empty text input
+        function createFillInTheBlanksQuestion(word, phrase) {
+            // Create an empty text input
+            var question = phrase.replace(" " + word + " ", `<input type="text"  style="margin: 0 5px;" >`);
+            return question;
+        }
+
+        // Function to check user answers
+        function checkAnswers() {
+            var userAnswers = [];
+            var answerInputs = document.querySelectorAll('input');
+            
+            answerInputs.forEach(function(input) {
+                userAnswers.push(input.value.trim());
+            });
+
+            var resultsContainer = document.getElementById('results-container');
+            var correctAnswers = flashcards.map(card => card.word);
+            var correct = true;
+
+            userAnswers.forEach(function(userAnswer, index) {
+                var isCorrect = userAnswer.toLowerCase() === correctAnswers[index].toLowerCase();
+                var feedback = isCorrect ? '✓' : '✗';
+                answerInputs[index].insertAdjacentHTML('afterend', ` ${feedback}`);
+                if (!isCorrect) {
+                    correct = false;
+                }
+            });
+
+            if (correct) {
+                resultsContainer.innerHTML = 'All answers are correct!';
+            } else {
+                resultsContainer.innerHTML = 'Some answers are incorrect. Please review.';
+            }
+        }
+
+        // Function to initialize the exercise
+        function initializeExercise() {
+            var exerciseContainer = document.getElementById("exercise-container");
+
+            // Load the JSON file dynamically
+            fetch('flashcards.json')
+                .then(response => response.json())
+                .then(data => {
+                    flashcards = data; // Store flashcards data
+                    
+                    // Loop through the flashcards and create questions for in_phrase_1 to in_phrase_4
+                    data.forEach(function(flashcard) {
+                        for (var i = 1; i <= 4; i++) {
+                            var phraseKey = `in_phrase_${i}`;
+                            var question = createFillInTheBlanksQuestion(flashcard.word, flashcard[phraseKey]);
+
+                            // Create a div to hold the question
+                            var questionDiv = document.createElement("div");
+                            questionDiv.innerHTML = question;
+
+                            // Append the question container to the exercise container
+                            exerciseContainer.appendChild(questionDiv);
+                        }
+                    });
+                })
+                .catch(error => console.error('Error loading JSON file:', error));
+        }
+
+        // Call the initialization function when the page loads
+        window.onload = initializeExercise;
+
+        // Add event listener for the "Check Answers" button
+        document.getElementById('check-answers-button').addEventListener('click', checkAnswers);
+    </script>
+</body>
+</html>
