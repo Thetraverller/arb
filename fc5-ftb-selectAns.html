@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fill in the Blanks Exercise</title>
+    <link rel="stylesheet" href="styles.css"> <!-- Link to the external CSS file -->
+</head>
+<body>
+    <h1>Fill in the Blanks Exercise</h1>
+    <div id="exercise-container"></div>
+    <button id="next-question-button">Next Question</button>
+    <div id="results-container"></div>
+    <div id="correct-answers-counter">Correct Answers on First Try: 0</div> <!-- Counter for correct answers -->
+    <div id="first-time-correct-counter">First Time Correct Answers: 0</div> <!-- Counter for first-time correct answers -->
+
+    <script>
+        var flashcards = []; // Initialize an empty array for flashcards data
+        var currentQuestionIndex = 0; // Initialize the current question index
+        var buttonClickCounter = 0; // Initialize the counter for button clicks
+        var correctButtonClickCounter = 0; // Initialize the counter for correct button clicks
+        var correctAnswersCounter = 0; // Counter for correct answers (resets on each question)
+        var firstTimeCorrectCounter = 0; // Counter for first-time correct answers (never resets)
+
+        // Function to create a fill-in-the-blanks question with an empty text input
+        function createFillInTheBlanksQuestion(word, phrase) {
+            // Create an empty text input
+            var question = phrase.replace(" " + word + " ", `<input type="text" style="margin: 0 5px;" >`);
+            return question;
+        }
+
+        // Function to shuffle an array randomly
+        function shuffleArray(array) {
+            for (var i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        // Function to initialize the exercise
+        function initializeExercise() {
+            var exerciseContainer = document.getElementById("exercise-container");
+
+            // Load the JSON file dynamically
+            fetch('flashcards.json')
+                .then(response => response.json())
+                .then(data => {
+                    flashcards = data; // Store flashcards data
+                    showNextQuestion(); // Show the first question
+                })
+                .catch(error => console.error('Error loading JSON file:', error));
+        }
+
+        // Function to show the next question
+        function showNextQuestion() {
+            var exerciseContainer = document.getElementById("exercise-container");
+            exerciseContainer.innerHTML = ''; // Clear the exercise container
+            buttonClickCounter = 0; // Reset button click counter
+            correctButtonClickCounter = 0; // Reset correct button click counter
+
+            if (currentQuestionIndex < flashcards.length) {
+                var flashcard = flashcards[currentQuestionIndex];
+                var phraseKey = `in_phrase_1`;
+                var question = createFillInTheBlanksQuestion(flashcard.word, flashcard[phraseKey]);
+
+                // Create a div to hold the question
+                var questionDiv = document.createElement("div");
+                questionDiv.innerHTML = question;
+
+                // Create an array of word choices (including the correct word)
+                var wordChoices = [flashcard.word]; // Start with the correct word
+
+                // Generate three additional incorrect word choices
+                var incorrectChoices = [];
+                while (incorrectChoices.length < 3) {
+                    var randomIndex = Math.floor(Math.random() * flashcards.length);
+                    var randomWord = flashcards[randomIndex].word;
+                    // Ensure the randomly selected word is not a duplicate and is not the correct word
+                    if (!incorrectChoices.includes(randomWord) && randomWord !== flashcard.word) {
+                        incorrectChoices.push(randomWord);
+                    }
+                }
+
+                // Combine correct and incorrect word choices and shuffle them
+                wordChoices = wordChoices.concat(incorrectChoices);
+                shuffleArray(wordChoices); // Shuffle the word choices randomly
+
+                // Create buttons for the word choices
+                wordChoices.forEach(function(choice) {
+                    var choiceButton = document.createElement("button");
+                    choiceButton.innerText = choice;
+
+                    // Add click event listener to set the selected word as the input value
+                    choiceButton.addEventListener('click', function() {
+                        var input = questionDiv.querySelector('input');
+                        input.value = choice;
+                        buttonClickCounter++; // Increment button click counter
+
+                        // Check if the answer is correct
+                        if (choice === flashcard.word) {
+                            // Check if it's the first attempt and increment the firstTimeCorrectCounter
+                            if (buttonClickCounter === 1 && correctButtonClickCounter === 1) {
+                                firstTimeCorrectCounter++;
+                            }
+                            // Always increment the correctAnswersCounter when answered correctly
+                            correctAnswersCounter++;
+                        }
+                    });
+
+                    // Append the choice button to the questionDiv
+                    questionDiv.appendChild(choiceButton);
+                });
+
+                // Append the question and the choice buttons to the exercise container
+                exerciseContainer.appendChild(questionDiv);
+
+                currentQuestionIndex++; // Increment the question index
+            } else {
+                // If all questions have been shown, display a message
+                exerciseContainer.innerHTML = 'All questions have been completed.';
+            }
+
+            // Update the counters in the HTML elements
+            var correctAnswersCounterElement = document.getElementById('correct-answers-counter');
+            correctAnswersCounterElement.innerText = `Correct Answers on First Try: ${correctAnswersCounter}`;
+
+            var firstTimeCorrectCounterElement = document.getElementById('first-time-correct-counter');
+            firstTimeCorrectCounterElement.innerText = `First Time Correct Answers: ${firstTimeCorrectCounter}`;
+        }
+
+        // Call the initialization function when the page loads
+        window.onload = initializeExercise;
+
+        // Add event listener for the "Next Question" button
+        document.getElementById('next-question-button').addEventListener('click', showNextQuestion);
+    </script>
+</body>
+</html>
