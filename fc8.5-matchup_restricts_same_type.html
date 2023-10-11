@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+        }
+        .card {
+            margin: 10px;
+            border: 2px solid #ccc;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            padding: 10px; /* Add padding for spacing */
+            min-width: 100px; /* Minimum width for better appearance */
+        }
+        .card.selected {
+            background-color: lightblue;
+            border-color: blue;
+        }
+        .card.correct {
+            background-color: lightgreen;
+            border-color: green;
+        }
+        .card.incorrect {
+            background-color: lightcoral;
+            border-color: red;
+        }
+        #count {
+            font-size: 24px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="count">Matches: <span id="counter">0</span></div>
+        <!-- Cards will be added here dynamically -->
+    </div>
+
+    <script>
+        // Your JavaScript code remains the same
+        let flashcards; // Variable to store flashcard data
+    
+        // Fetch the flashcards data from the JSON file
+        fetch('flashcards.json')
+            .then(response => response.json())
+            .then(data => {
+                flashcards = data; // Store the flashcard data in the variable
+    
+                // Continue with the game setup
+                setupGame();
+            })
+            .catch(error => console.error('Error loading flashcards:', error));
+    
+        function setupGame() {
+            const cardsContainer = document.querySelector('.container');
+            let selectedCards = [];
+            let matchCounter = 0;
+    
+            // Replace 'words' with 'flashcards' for iterating through flashcards
+            flashcards.forEach(flashcardData => {
+                // Create two cards for each flashcard (one for 'word' and one for 'type')
+                for (let i = 0; i < 2; i++) {
+                    const card = document.createElement('div');
+                    card.classList.add('card');
+                    card.id = `${flashcardData.word_id}-${i}`; // Unique IDs for each card
+                    card.key = i === 0 ? 'word' : 'type'; // Add a key to the card to store whether it's a word or type
+    
+                    // Create a paragraph element to display the card's content (either 'word' or 'type')
+                    const cardText = document.createElement('p');
+                    cardText.textContent = i === 0 ? flashcardData.word : flashcardData.type; // Displaying 'word' or 'type'
+    
+                    // Append the text paragraph to the card div
+                    card.appendChild(cardText);
+    
+                    card.onclick = () => toggleCard(card.id, card.key, flashcardData.type);
+                    cardsContainer.appendChild(card);
+                }
+            });
+    
+            function toggleCard(cardId, cardKey, type) {
+                const card = document.getElementById(cardId);
+    
+                if (selectedCards.length < 2 || card.classList.contains('selected')) {
+                    card.classList.toggle('selected');
+    
+                    if (card.classList.contains('selected')) {
+                        selectedCards.push({ id: cardId, key: cardKey, type });
+                    } else {
+                        selectedCards = selectedCards.filter(selectedCard => selectedCard.id !== cardId);
+                    }
+    
+                    if (selectedCards.length === 2) {
+                        const type1 = selectedCards[0].type;
+                        const type2 = selectedCards[1].type;
+                        const key1 = selectedCards[0].key;
+                        const key2 = selectedCards[1].key;
+    
+                        if (type1 === type2 && key1 !== key2) { // Check if types match and keys are different
+                            selectedCards.forEach(selectedCard => {
+                                const matchedCard = document.getElementById(selectedCard.id);
+                                matchedCard.classList.add('correct');
+                                matchedCard.classList.remove('incorrect', 'selected');
+                                matchedCard.onclick = null; // Disable click event for matched cards
+                            });
+                            matchCounter++;
+                            document.getElementById('counter').textContent = matchCounter;
+    
+                            // Check if all cards have been matched
+                            if (matchCounter === flashcards.length) {
+                                setTimeout(() => {
+                                    alert('Congratulations! You have matched all the cards.');
+                                }, 500); // Show an alert after a brief delay
+                            }
+    
+                            // Delay before removing matched cards
+                            setTimeout(() => {
+                                selectedCards.forEach(selectedCard => {
+                                    const matchedCard = document.getElementById(selectedCard.id);
+                                    matchedCard.remove(); // Remove matched cards from the DOM
+                                });
+                                selectedCards = [];
+                            }, 1000); // Delay for 1 second (1000 milliseconds)
+                        } else {
+                            selectedCards.forEach(selectedCard => {
+                                const mismatchedCard = document.getElementById(selectedCard.id);
+                                mismatchedCard.classList.add('incorrect');
+                                mismatchedCard.classList.remove('correct');
+                            });
+    
+                            // Delay before resetting selected cards
+                            setTimeout(() => {
+                                selectedCards.forEach(selectedCard => {
+                                    const mismatchedCard = document.getElementById(selectedCard.id);
+                                    mismatchedCard.classList.remove('selected', 'correct', 'incorrect');
+                                });
+                                selectedCards = [];
+                            }, 1000); // Delay for 1 second (1000 milliseconds)
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>

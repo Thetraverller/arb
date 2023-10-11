@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr); /* Adjust the number of columns as needed */
+            gap: 20px;
+        }
+        .card {
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            cursor: pointer;
+            background-color: #fff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+        .card.selected {
+            background-color: #0048ff10;
+            border-color: #001affc0;
+            transform: scale(1.05);
+        }
+        .card.correct {
+            background-color: #aaffaa;
+            border-color: #00aa00;
+        }
+        .card.incorrect {
+            background-color: #ffaaaa;
+            border-color: #aa0000;
+        }
+        #count {
+            font-size: 24px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="count">Matches: <span id="counter">0</span></div>
+        <div id="cards-container" class="cards-grid"> <!-- Add the "cards-grid" class to the container -->
+            <!-- Cards will be added here dynamically -->
+        </div>
+    </div>
+
+    <script>
+        // Load cards from flashcards.json using fetch
+        fetch('flashcards.json')
+            .then(response => response.json())
+            .then(cards => {
+                const cardsContainer = document.getElementById('cards-container');
+                let selectedCards = [];
+                let matchCounter = 0;
+
+                cards.forEach(cardData => {
+                    // Create two cards for each word (one for 'word' and one for 'type')
+                    for (let i = 0; i < 2; i++) {
+                        const card = document.createElement('div');
+                        card.classList.add('card');
+                        card.id = `${cardData.word_id}-${i}`; // Unique IDs for each card
+                        
+                        // Create a paragraph element to display the card's content (either 'word' or 'type')
+                        const cardText = document.createElement('p');
+                        cardText.textContent = i === 0 ? cardData.word : cardData.type; // Displaying 'word' or 'type'
+                        
+                        // Append the text paragraph to the card div
+                        card.appendChild(cardText);
+                        
+                        card.onclick = () => toggleCard(card.id, cardData.type);
+                        cardsContainer.appendChild(card);
+                    }
+                });
+
+                function toggleCard(cardId, type) {
+                    const card = document.getElementById(cardId);
+
+                    if (selectedCards.length < 2 || card.classList.contains('selected')) {
+                        card.classList.toggle('selected');
+
+                        if (card.classList.contains('selected')) {
+                            selectedCards.push({ id: cardId, type });
+                        } else {
+                            selectedCards = selectedCards.filter(selectedCard => selectedCard.id !== cardId);
+                        }
+
+                        if (selectedCards.length === 2) {
+                            const type1 = selectedCards[0].type;
+                            const type2 = selectedCards[1].type;
+
+                            if (type1 === type2) {
+                                selectedCards.forEach(selectedCard => {
+                                    const matchedCard = document.getElementById(selectedCard.id);
+                                    matchedCard.classList.add('correct');
+                                    matchedCard.classList.remove('incorrect', 'selected');
+                                    matchedCard.onclick = null; // Disable click event for matched cards
+                                });
+                                matchCounter++;
+                                document.getElementById('counter').textContent = matchCounter;
+
+                                // Check if all cards have been matched
+                                if (matchCounter === cards.length / 2) {
+                                    setTimeout(() => {
+                                        alert('Congratulations! You have matched all the cards.');
+                                    }, 500); // Show an alert after a brief delay
+                                }
+
+                                // Delay before removing matched cards
+                                setTimeout(() => {
+                                    selectedCards.forEach(selectedCard => {
+                                        const matchedCard = document.getElementById(selectedCard.id);
+                                        matchedCard.remove(); // Remove matched cards from the DOM
+                                    });
+                                    selectedCards = [];
+                                }, 1000); // Delay for 1 second (1000 milliseconds)
+                            } else {
+                                selectedCards.forEach(selectedCard => {
+                                    const mismatchedCard = document.getElementById(selectedCard.id);
+                                    mismatchedCard.classList.add('incorrect');
+                                    mismatchedCard.classList.remove('correct');
+                                });
+
+                                // Delay before resetting selected cards
+                                setTimeout(() => {
+                                    selectedCards.forEach(selectedCard => {
+                                        const mismatchedCard = document.getElementById(selectedCard.id);
+                                        mismatchedCard.classList.remove('selected', 'correct', 'incorrect');
+                                    });
+                                    selectedCards = [];
+                                }, 1000); // Delay for 1 second (1000 milliseconds)
+                            }
+                        }
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error loading flashcards:', error);
+            });
+    </script>
+</body>
+</html>

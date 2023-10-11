@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fill in the Blanks Exercise</title>
+    <link rel="stylesheet" href="styles.css"> <!-- Link to the external CSS file -->
+</head>
+<body>
+    <h1>Fill in the Blanks Exercise</h1>
+    <div id="exercise-container"></div>
+    <button id="next-question-button">Next Question</button>
+    <div id="results-container"></div>
+    <div id="correct-answers-counter">Correct Answers on First Try: 0</div> <!-- Counter for correct answers -->
+    <div id="first-time-correct-counter">First Time Correct Answers: 0</div> <!-- Counter for first-time correct answers -->
+
+    <script>
+        var flashcards = [];
+        var currentQuestionIndex = 0;
+        var correctAnswersCounter = 0;
+        var firstTimeCorrectCounter = 0;
+    
+        function createFillInTheBlanksQuestion(word, phrase) {
+            var question = phrase.replace(" " + word + " ", `<input type="text" style="margin: 0 5px;" >`);
+            return question;
+        }
+    
+        function shuffleArray(array) {
+            for (var i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+    
+        function initializeExercise() {
+            var exerciseContainer = document.getElementById("exercise-container");
+    
+            fetch('flashcards.json')
+                .then(response => response.json())
+                .then(data => {
+                    flashcards = data;
+                    showNextQuestion();
+                })
+                .catch(error => console.error('Error loading JSON file:', error));
+        }
+    
+        function showNextQuestion() {
+            var exerciseContainer = document.getElementById("exercise-container");
+            exerciseContainer.innerHTML = '';
+    
+            if (currentQuestionIndex < flashcards.length) {
+                var flashcard = flashcards[currentQuestionIndex];
+                var phraseKey = `in_phrase_1`;
+                var question = createFillInTheBlanksQuestion(flashcard.word, flashcard[phraseKey]);
+    
+                var questionDiv = document.createElement("div");
+                questionDiv.innerHTML = question;
+    
+                var wordChoices = [flashcard.word];
+                var incorrectChoices = [];
+    
+                while (incorrectChoices.length < 3) {
+                    var randomIndex = Math.floor(Math.random() * flashcards.length);
+                    var randomWord = flashcards[randomIndex].word;
+    
+                    if (!incorrectChoices.includes(randomWord) && randomWord !== flashcard.word) {
+                        incorrectChoices.push(randomWord);
+                    }
+                }
+    
+                wordChoices = wordChoices.concat(incorrectChoices);
+                shuffleArray(wordChoices);
+    
+                wordChoices.forEach(function(choice) {
+                    var choiceButton = document.createElement("button");
+                    choiceButton.innerText = choice;
+    
+                    choiceButton.draggable = true;
+    
+                    choiceButton.addEventListener('dragstart', function(event) {
+                        event.dataTransfer.setData('text/plain', choice);
+                    });
+    
+                    var input = questionDiv.querySelector('input');
+    
+                    input.addEventListener('dragover', function(event) {
+                        event.preventDefault();
+                    });
+    
+                    input.addEventListener('drop', function(event) {
+                        event.preventDefault();
+                        var draggedChoice = event.dataTransfer.getData('text/plain');
+                        input.value = draggedChoice;
+    
+                        if (draggedChoice === flashcard.word) {
+                            correctAnswersCounter++;
+                            if (correctAnswersCounter === 1) {
+                                firstTimeCorrectCounter++;
+                            }
+                        }
+                    });
+    
+                    questionDiv.appendChild(choiceButton);
+                });
+    
+                exerciseContainer.appendChild(questionDiv);
+    
+                currentQuestionIndex++;
+            } else {
+                exerciseContainer.innerHTML = 'All questions have been completed.';
+            }
+    
+            var correctAnswersCounterElement = document.getElementById('correct-answers-counter');
+            correctAnswersCounterElement.innerText = `Correct Answers on First Try: ${correctAnswersCounter}`;
+    
+            var firstTimeCorrectCounterElement = document.getElementById('first-time-correct-counter');
+            firstTimeCorrectCounterElement.innerText = `First Time Correct Answers: ${firstTimeCorrectCounter}`;
+        }
+    
+        window.onload = initializeExercise;
+    
+        document.getElementById('next-question-button').addEventListener('click', showNextQuestion);
+    </script>
+    
+    
+</body>
+</html>

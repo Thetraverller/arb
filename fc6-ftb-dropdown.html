@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fill in the Blanks Exercise</title>
+</head>
+<body>
+    <h1>Fill in the Blanks Exercise</h1>
+    <div id="exercise-container"></div>
+    <button id="check-answers-button">Check Answers</button>
+    <div id="results-container"></div>
+
+    <script>
+        var flashcards = []; // Initialize an empty array for flashcards data
+
+        // Function to shuffle an array
+        function shuffleArray(array) {
+            for (var i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // Function to create a fill-in-the-blanks question with a dropdown menu
+        function createFillInTheBlanksQuestion(word, phrase, incorrectOptions) {
+            // Shuffle the options array to randomize the order of answer choices
+            var options = [word, ...incorrectOptions];
+            options = shuffleArray(options);
+
+            // Create a dropdown select element
+            var select = document.createElement("select");
+
+            // Create an option for each choice
+            options.forEach(function(option) {
+                var optionElement = document.createElement("option");
+                optionElement.value = option;
+                optionElement.text = option;
+                select.appendChild(optionElement);
+            });
+
+            // Replace the word in the phrase with the dropdown
+            var question = phrase.replace(" " + word + " ", select.outerHTML);
+            return question;
+        }
+
+        // Function to check user answers
+        function checkAnswers() {
+            var userAnswers = [];
+            var answerSelects = document.querySelectorAll('select');
+
+            answerSelects.forEach(function(select) {
+                userAnswers.push(select.value.trim());
+            });
+
+            var resultsContainer = document.getElementById('results-container');
+            var correctAnswers = flashcards.map(card => card.word);
+            var correct = true;
+
+            userAnswers.forEach(function(userAnswer, index) {
+                var isCorrect = userAnswer.toLowerCase() === correctAnswers[index].toLowerCase();
+                var feedback = isCorrect ? '✓' : '✗';
+                answerSelects[index].insertAdjacentHTML('afterend', ` ${feedback}`);
+                if (!isCorrect) {
+                    correct = false;
+                }
+            });
+
+            if (correct) {
+                resultsContainer.innerHTML = 'All answers are correct!';
+            } else {
+                resultsContainer.innerHTML = 'Some answers are incorrect. Please review.';
+            }
+        }
+
+        // Function to initialize the exercise
+// Function to initialize the exercise
+function initializeExercise() {
+    var exerciseContainer = document.getElementById("exercise-container");
+
+    // Load the JSON file dynamically
+    fetch('flashcards.json')
+        .then(response => response.json())
+        .then(data => {
+            flashcards = data; // Store flashcards data
+
+            // Loop through the flashcards and create questions for in_phrase_1 to in_phrase_4
+            data.forEach(function(flashcard) {
+                for (var i = 1; i <= 4; i++) {
+                    var phraseKey = `in_phrase_${i}`;
+
+                    // Get the correct answer and incorrect options
+                    var correctAnswer = flashcard.word;
+                    var incorrectOptions = getIncorrectOptions(data, correctAnswer);
+
+                    var question = createFillInTheBlanksQuestion(correctAnswer, flashcard[phraseKey], incorrectOptions);
+
+                    // Create a div to hold the question
+                    var questionDiv = document.createElement("div");
+                    questionDiv.innerHTML = question;
+
+                    // Append the question container to the exercise container
+                    exerciseContainer.appendChild(questionDiv);
+                }
+            });
+        })
+        .catch(error => console.error('Error loading JSON file:', error));
+}
+
+// Function to get incorrect options
+function getIncorrectOptions(data, correctAnswer) {
+    var incorrectOptions = [];
+
+    // Randomly select three incorrect answers from the JSON data
+    while (incorrectOptions.length < 3) {
+        var randomIndex = Math.floor(Math.random() * data.length);
+        var randomWord = data[randomIndex].word;
+
+        // Ensure the incorrect option is different from the correct answer
+        if (randomWord !== correctAnswer && !incorrectOptions.includes(randomWord)) {
+            incorrectOptions.push(randomWord);
+        }
+    }
+
+    return incorrectOptions;
+}
+
+        // Call the initialization function when the page loads
+        window.onload = initializeExercise;
+
+        // Add event listener for the "Check Answers" button
+        document.getElementById('check-answers-button').addEventListener('click', checkAnswers);
+    </script>
+</body>
+</html>
