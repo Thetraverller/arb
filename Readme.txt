@@ -2,7 +2,8 @@ Exercises:
   - fill in the blanks
   - Match up
   - Spot/fix the mistake
-  - select answer
+  - Select answer
+  - Order words
   - Vocab trainer
   -  Sarf
 
