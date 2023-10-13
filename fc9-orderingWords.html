@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drag and Drop Objects with Reordering</title>
+    <style>
+        .container {
+            width: 400px;
+            height: 150px;
+            border: 2px solid #000;
+            margin: 20px;
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .objects {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+        }
+
+        .object {
+            width: 50px;
+            height: 50px;
+            background-color: #3498db;
+            color: #fff;
+            text-align: center;
+            line-height: 50px;
+            cursor: pointer;
+            margin: 5px;
+            border-radius: 5px;
+        }
+
+        .submit-button {
+            margin: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Drag and Drop Objects with Reordering</h1>
+    <div class="container" id="container"></div>
+    <div class="objects" id="objects"></div>
+    <button class="submit-button" onclick="submitOrder()">Submit Order</button>
+    <button class="next-button" onclick="nextQuestion()">Next</button>
+
+    <script>
+        // Fetch and use the JSON data from 'flashcards.json'
+        fetch('flashcards.json')
+            .then(response => response.json())
+            .then(data => {
+                const jsonData = data;
+                const container = document.getElementById("container");
+                const objectsContainer = document.getElementById("objects");
+                const nextButton = document.querySelector(".next-button");
+                const submitButton = document.querySelector(".submit-button");
+    
+                const sentences = [];
+                let currentObjectIndex = 0;
+    
+                // Extract sentences from JSON data
+                function extractSentences() {
+                    sentences.length = 0; // Clear the array
+                    for (const data of jsonData) {
+                        for (let i = 1; i <= 4; i++) {
+                            const sentenceKey = `in_phrase_${i}`;
+                            sentences.push(data[sentenceKey]);
+                        }
+                    }
+                }
+    
+                extractSentences();
+    
+                // Function to load a sentence based on the current index
+                function loadSentence() {
+                    // Clear the existing objects
+                    container.innerHTML = "";
+                    objectsContainer.innerHTML = "";
+    
+                    const sentence = sentences[currentObjectIndex].split(" ");
+                    shuffleArray(sentence);
+    
+                    // Create objects based on the shuffled sentence
+                    sentence.forEach((word, index) => {
+                        const object = document.createElement("div");
+                        object.classList.add("object");
+                        object.draggable = true;
+                        object.textContent = word;
+                        object.setAttribute("data-number", index + 1);
+                        object.onclick = () => addToContainer(index + 1);
+                        objectsContainer.appendChild(object);
+                    });
+    
+                    // Reset the "Next" button state
+                    nextButton.disabled = true;
+                }
+    
+                loadSentence();
+    
+                // Shuffle the sentence array
+                function shuffleArray(array) {
+                    for (let i = array.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [array[i], array[j]] = [array[j], array[i]];
+                    }
+                }
+    
+                // Handle dragging objects into the container
+                objectsContainer.addEventListener("dragstart", (e) => {
+                    e.dataTransfer.setData("text/plain", e.target.getAttribute("data-number"));
+                });
+    
+                // Handle dropping objects into the container
+                container.addEventListener("dragover", (e) => {
+                    e.preventDefault();
+                });
+    
+                container.addEventListener("drop", (e) => {
+                    e.preventDefault();
+                    const data = e.dataTransfer.getData("text/plain");
+                    const droppedObject = objectsContainer.querySelector(`[data-number="${data}"]`);
+                    if (droppedObject) {
+                        container.appendChild(droppedObject);
+                    }
+                });
+    
+                // Allow reordering objects within the container
+                container.addEventListener("dragstart", (e) => {
+                    e.dataTransfer.setData("text/plain", e.target.getAttribute("data-number"));
+                });
+    
+                container.addEventListener("dragover", (e) => {
+                    e.preventDefault();
+                });
+    
+                container.addEventListener("drop", (e) => {
+                    e.preventDefault();
+                    const data = e.dataTransfer.getData("text/plain");
+                    const droppedObject = container.querySelector(`[data-number="${data}"]`);
+                    if (droppedObject) {
+                        const targetObject = e.target;
+                        if (targetObject.classList.contains("object")) {
+                            container.insertBefore(droppedObject, targetObject);
+                        }
+                    }
+                });
+    
+                // Function to add an object to the end of the container when clicked
+                function addToContainer(dataNumber) {
+                    const object = objectsContainer.querySelector(`[data-number="${dataNumber}"]`);
+                    if (object) {
+                        container.appendChild(object);
+                    }
+                }
+    
+                // Function to remove an object from the container when clicked and place it back outside
+                container.addEventListener("click", (e) => {
+                    if (e.target.classList.contains("object")) {
+                        const object = e.target;
+                        objectsContainer.appendChild(object);
+                    }
+                });
+    
+                // Submit the order
+                function submitOrder() {
+                    const sortedObjects = [...container.querySelectorAll(".object")];
+    
+                    // Check if the order matches the current sentence
+                    const resultSentence = sortedObjects.map(obj => obj.textContent).join(" ");
+                    if (resultSentence === sentences[currentObjectIndex]) {
+                        alert(`The order is correct: "${sentences[currentObjectIndex]}"`);
+                        nextButton.disabled = false;
+                    } else {
+                        alert(`The order is not correct. Please arrange the objects in the order "${sentences[currentObjectIndex]}".`);
+                    }
+                }
+    
+                // Function to move to the next question
+                function nextQuestion() {
+                    currentObjectIndex++;
+                    if (currentObjectIndex < sentences.length) {
+                        loadSentence();
+                    } else {
+                        currentObjectIndex = 0; // Restart if all objects are processed
+                        loadSentence();
+                    }
+                }
+    
+                // Add event listeners to the "Submit Order" and "Next" buttons
+                submitButton.addEventListener("click", submitOrder);
+                nextButton.addEventListener("click", nextQuestion);
+            })
+            .catch(error => {
+                console.error('Error fetching JSON:', error);
+            });
+    </script>
+    
+    
+</body>
+</html>
